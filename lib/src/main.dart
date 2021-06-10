@@ -465,7 +465,8 @@ class _CropBoxState extends State<CropBox> {
   @override
   void didUpdateWidget(covariant CropBox oldWidget) {
     if (widget.cropRatio != oldWidget.cropRatio ||
-        widget.clipSize != oldWidget.clipSize) {
+        widget.clipSize != oldWidget.clipSize ||
+        widget.child != oldWidget.child) {
       setState(() {
         isReady = false;
       });
