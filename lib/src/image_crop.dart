@@ -1,10 +1,9 @@
-import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:exif/exif.dart';
 import 'package:flutter/material.dart';
 import 'package:image_editor/image_editor.dart';
 import 'package:image_size_getter/image_size_getter.dart' as imageGetter;
-import 'package:exif/exif.dart';
 
 class ImageCropOutputFormatQuality {
   static const int VeryHigh = 100;
@@ -52,11 +51,13 @@ class ImageCrop {
   /// get image size with exif
   static Future<Size> getImageSize(Uint8List bytes) async {
     try {
-      Map<String?, IfdTag>? data = await readExifFromBytes(bytes);
-      double width = data?['EXIF ExifImageWidth']?.values?[0].toDouble();
-      double height = data?['EXIF ExifImageLength']?.values?[0].toDouble();
+      final data = await readExifFromBytes(bytes);
+      double width =
+          data['EXIF ExifImageWidth']!.values.firstAsInt().toDouble();
+      double height =
+          data['EXIF ExifImageLength']!.values.firstAsInt().toDouble();
       if (width > height) {
-        if (data!['Image Orientation']!.printable!.contains('Horizontal')) {
+        if (data['Image Orientation']!.printable.contains('Horizontal')) {
           return Size(width.toDouble(), height);
         } else {
           return Size(height, width);

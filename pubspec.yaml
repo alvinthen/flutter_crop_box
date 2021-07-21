@@ -13,7 +13,7 @@ dependencies:
     sdk: flutter
   image_editor: ^1.0.0
   image_size_getter: ^1.0.0
-  exif: ^2.1.0
+  exif: ^3.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

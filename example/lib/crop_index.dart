@@ -1,19 +1,14 @@
 import 'dart:typed_data';
+import 'dart:ui';
 
+import 'package:crop_box/crop_box.dart';
 import 'package:example/image_result_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:ui';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import 'package:crop_box/crop_box.dart';
-import 'package:image_picker/image_picker.dart';
-
-enum ClipType {
-  networkImage,
-  localImage
-}
+enum ClipType { networkImage, localImage }
 
 class CropIndex extends StatefulWidget {
   final double width;
@@ -21,7 +16,14 @@ class CropIndex extends StatefulWidget {
   final ClipType clipType;
   final Uint8List? localImageData;
   final String? imageUrl;
-  CropIndex({Key? key, required this.width, required this.height, required this.clipType, this.localImageData, this.imageUrl}) : super(key: key);
+  CropIndex(
+      {Key? key,
+      required this.width,
+      required this.height,
+      required this.clipType,
+      this.localImageData,
+      this.imageUrl})
+      : super(key: key);
 
   @override
   _CropIndexState createState() => _CropIndexState();
@@ -29,10 +31,13 @@ class CropIndex extends StatefulWidget {
 
 class _CropIndexState extends State<CropIndex> {
   Rect _resultRect = Rect.zero;
+
   /// 最大裁剪区域 会结合裁剪比例计算实际裁剪框范围
   Size _maxCropSize = Size(300, 300);
+
   /// 裁剪比例
   Size _cropRatio = Size(16, 9);
+
   /// 裁剪区域
   Rect? _cropRect;
 
@@ -73,28 +78,33 @@ class _CropIndexState extends State<CropIndex> {
                   print("裁剪区域变化 $rect");
                   setState(() {});
                 },
-                child: widget.clipType == ClipType.networkImage ? Image.network(
-                  widget.imageUrl!,
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.contain,
-                  loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                    if (loadingProgress == null)
-                      return child;
-                    return Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded.toDouble() / loadingProgress.expectedTotalBytes!.toDouble()
-                            : null,
+                child: widget.clipType == ClipType.networkImage
+                    ? Image.network(
+                        widget.imageUrl!,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (BuildContext context, Widget child,
+                            ImageChunkEvent? loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded
+                                          .toDouble() /
+                                      loadingProgress.expectedTotalBytes!
+                                          .toDouble()
+                                  : null,
+                            ),
+                          );
+                        },
+                      )
+                    : Image.memory(
+                        widget.localImageData!,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.contain,
                       ),
-                    );
-                  },
-                ) : Image.memory(
-                    widget.localImageData!,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.contain,
-                  ),
               ),
             ),
             SizedBox(
@@ -199,40 +209,48 @@ class _CropIndexState extends State<CropIndex> {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            onPressed: exportLoading ? null : () async {
-                              setState(() {
-                                exportLoading = true;
-                              });
+                            onPressed: exportLoading
+                                ? null
+                                : () async {
+                                    setState(() {
+                                      exportLoading = true;
+                                    });
 
-                              /// get origin image uint8List
-                              Uint8List bytes;
-                              if(widget.clipType == ClipType.networkImage) {
-                                bytes = (await NetworkAssetBundle(Uri.parse(widget.imageUrl!))
-                                .load(widget.imageUrl!))
-                                .buffer
-                                .asUint8List();
-                              }else{
-                                bytes = widget.localImageData!;
-                              }
-                              /// get result uint8List
-                              Uint8List result = (await ImageCrop.getResult(
-                                clipRect: _resultRect, 
-                                image: bytes
-                              ))!;
-                              
-                              setState(() {
-                                exportLoading = false;
-                              });
+                                    /// get origin image uint8List
+                                    Uint8List bytes;
+                                    if (widget.clipType ==
+                                        ClipType.networkImage) {
+                                      bytes = (await NetworkAssetBundle(
+                                                  Uri.parse(widget.imageUrl!))
+                                              .load(widget.imageUrl!))
+                                          .buffer
+                                          .asUint8List();
+                                    } else {
+                                      bytes = widget.localImageData!;
+                                    }
 
-                              /// if you need to export to gallery
-                              /// you can use this https://pub.dev/packages/image_gallery_saver
-                              /// ... your export code ...
-                              /// 
-                              /// my code is only to show result in other page
-                              Navigator.of(context).push(new MaterialPageRoute(builder: (_) {
-                                return ImageResultPage(imageBytes: result,);
-                              }));
-                            },
+                                    /// get result uint8List
+                                    Uint8List result =
+                                        (await ImageCrop.getResult(
+                                            clipRect: _resultRect,
+                                            image: bytes))!;
+
+                                    setState(() {
+                                      exportLoading = false;
+                                    });
+
+                                    /// if you need to export to gallery
+                                    /// you can use this https://pub.dev/packages/image_gallery_saver
+                                    /// ... your export code ...
+                                    ///
+                                    /// my code is only to show result in other page
+                                    Navigator.of(context).push(
+                                        new MaterialPageRoute(builder: (_) {
+                                      return ImageResultPage(
+                                        imageBytes: result,
+                                      );
+                                    }));
+                                  },
                           ),
                         ],
                       ),
